@@ -1,0 +1,100 @@
+references:
+  defaults: &defaults
+    working_directory: ~/bigtest
+    docker:
+      - image: circleci/node:8-browsers
+
+  cache_key: &cache_key
+    convergence-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
+
+  attach_workspace: &attach_workspace
+    attach_workspace:
+      at: ~/bigtest
+
+version: 2.0
+jobs:
+  install:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore cache
+          key: *cache_key
+      - run:
+          name: Install dependencies
+          command: yarn
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - ./
+      - save_cache:
+          name: Save cache
+          key: *cache_key
+          paths:
+            - node_modules
+
+  lint:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: Lint packages
+          command: yarn lint
+
+  build:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: Build documentation
+          command: yarn docs
+      - run:
+          name: Build packages
+          command: yarn build
+
+  test:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: Run tests
+          command: yarn test
+
+  deploy:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: Publish to NPM
+          command: |
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npx bigtest-release --access=public
+      - run:
+          name: Push Tags
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            git push --tags
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - install
+      - lint:
+          requires:
+            - install
+      - build:
+          requires:
+            - install
+      - test:
+          requires:
+            - install
+      - deploy:
+          requires:
+            - lint
+            - build
+            - test
+          filters:
+            branches:
+              only: master
