@@ -1,4 +1,4 @@
-# @bigtest/convergence
+# @bigtest/convergence [![CircleCI](https://circleci.com/gh/bigtestjs/convergence/tree/master.svg?style=svg)](https://circleci.com/gh/bigtestjs/convergence/tree/master)
 
 Recognize a desired state and synchronize on when that state has been achieved.
 
