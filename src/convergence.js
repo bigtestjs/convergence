@@ -95,11 +95,11 @@ class Convergence {
   constructor(options = {}, previous = {}) {
     // a timeout was given
     if (typeof options === 'number') {
-      options = { _timeout: options };
+      options = { timeout: options };
     }
 
     let {
-      _timeout = previous._timeout || 2000,
+      timeout = previous._timeout || 2000,
       _stack = []
     } = options;
 
@@ -107,7 +107,7 @@ class Convergence {
     _stack = [...(previous._stack || []), ..._stack];
 
     Object.defineProperties(this, {
-      _timeout: { value: _timeout },
+      _timeout: { value: timeout },
       _stack: { value: _stack }
     });
   }
