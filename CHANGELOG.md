@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+
+- transpiled es module bundle
+
 ### Changed
 
 - `_timeout` to `timeout` when providing an options hash to the

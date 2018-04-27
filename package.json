@@ -4,8 +4,8 @@
   "version": "0.7.0",
   "license": "MIT",
   "repository": "https://github.com/bigtestjs/convergence",
-  "main": "dist/index.js",
-  "module": "src/index.js",
+  "main": "dist/umd/index.js",
+  "module": "dist/esm/index.js",
   "types": "types/index.d.ts",
   "files": [
     "dist",
