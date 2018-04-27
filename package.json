@@ -6,6 +6,7 @@
   "repository": "https://github.com/bigtestjs/convergence",
   "main": "dist/index.js",
   "module": "src/index.js",
+  "types": "types/index.d.ts",
   "scripts": {
     "build": "rollup --config",
     "test": "mocha --opts ./tests/mocha.opts ./tests",
