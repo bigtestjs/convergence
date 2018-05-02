@@ -534,6 +534,17 @@ describe('BigTest Convergence', () => {
         expect(stats.value).to.equal(50);
         expect(stats.queue).to.have.lengthOf(4);
       });
+
+      it('stores and calls the callbacks first-in-first-out', async () => {
+        let arr = [];
+
+        let assertion = converge
+          .do(() => arr.push('first'))
+          .do(() => arr.push('second'));
+
+        await expect(assertion.run()).to.be.fulfilled;
+        expect(arr).to.deep.equal(['first', 'second']);
+      });
     });
   });
 });
