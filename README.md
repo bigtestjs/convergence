@@ -58,9 +58,9 @@ within a single timeout period.
 ``` javascript
 import Convergence from '@bigtest/convergence'
 
-// starts a new stack
+// starts a new queue
 new Convergence()
-  // adds a convergent function to the stack
+  // adds a convergent function to the queue
   .when(() => expect($el).to.exist)
   // called when the previous function converges
   .do(() => $el.get(0).click())
@@ -139,7 +139,7 @@ convergeLong.timeout(); // => 5000
 **`.when(assert)`**
 
 Returns a new `Convergence` instance and adds the provided assertion
-to its stack. When this instance is ran, the `assert` function will be
+to its queue. When this instance is ran, the `assert` function will be
 looped over repeatedly until it passes, or until the convergence's
 timeout has been exceeded.
 
@@ -164,9 +164,9 @@ or never fails for the duration of the timeout.
 converge.always(() => total === 5)
 ```
 
-When a convergence added with `.always()` is last in the stack, it
+When a convergence added with `.always()` is last in the queue, it
 will be given the remaining total timeout to converge on its assertion
-always passing. When it _is not_ last in the stack, `timeout` is used
+always passing. When it _is not_ last in the queue, `timeout` is used
 instead. By default, `timeout` will be a tenth of the total timeout
 or `20ms` (whichever is greater).
 
@@ -183,14 +183,14 @@ converge
 new Convergence(2000)
   // defaults to 200ms
   .always(() => total === 5)
-  // this counts as part of the stack
+  // this counts as part of the queue
   .do(() => console.log(total))
 ```
 
 **`.do(exec)`**
 
 This method is useful when you need to execute something after a
-convergence in the stack, but before other convergences are ran.
+convergence in the queue, but before other convergences are ran.
 This can help with debugging in between convergences and also
 allows you to run side effects between convergences.
 
@@ -203,10 +203,10 @@ converge
   .always(() => total === 500)
 ```
 
-Functions in a `Convergence` stack curry their return value
-between other functions in the stack. This means that what you return
-from one function in the stack will be available as the argument
-given to the next function in the stack.
+Functions in a `Convergence` queue curry their return value
+between other functions in the queue. This means that what you return
+from one function in the queue will be available as the argument
+given to the next function in the queue.
 
 ``` javascript
 converge
@@ -258,8 +258,8 @@ converge1.append(converge5)
 In order to actually run a `Convergence` instance, you must call the
 `.run()` method. This method **does not return another instance**,
 instead it returns a promise that resolves when all assertions in the
-stack have converged. The returned promise will keep track of the
-current timeout and ensure that all convergences in the stack converge
+queue have converged. The returned promise will keep track of the
+current timeout and ensure that all convergences in the queue converge
 within that period.
 
 Because `.run()` returns a promise, and `Convergence` is immutable,
@@ -278,27 +278,27 @@ converge.run()
 
 The promise returned from `.run()` resolves with a stats object. This
 stats object holds various information about how the convergences in
-the stack ran. The `stack` property is an array of stats objects
-specific to each function in the stack.
+the queue ran. The `queue` property is an array of stats objects
+specific to each function in the queue.
 
 ``` javascript
 converge.run((stats) => {
   stats.start    // start time of the convergences
   stats.end      // end time of the convergences
-  stats.elapsed  // time taken to converge on the entire stack
-  stats.runs     // number of times functions in the stack ran
+  stats.elapsed  // time taken to converge on the entire queue
+  stats.runs     // number of times functions in the queue ran
   stats.timeout  // this Convergence instance's timeout
-  stats.value    // value returned from the last function in the stack
-  stats.stack    // an array of stats objects from the stack
+  stats.value    // value returned from the last function in the queue
+  stats.queue    // an array of stats objects from the queue
 
-  // each function in the stack produces similar stats objects
-  stats.stack[0].start    // start time of this convergence
-  stats.stack[0].end      // end time of this convergence
-  stats.stack[0].elapsed  // time taken for this convergence
-  stats.stack[0].runs     // number of times this convergence ran
-  stats.stack[0].timeout  // the timeout this convergence was given
-  stats.stack[0].always   // whether this convergence used .always()
-  stats.stack[0].value    // value returned from this convergence
+  // each function in the queue produces similar stats objects
+  stats.queue[0].start    // start time of this convergence
+  stats.queue[0].end      // end time of this convergence
+  stats.queue[0].elapsed  // time taken for this convergence
+  stats.queue[0].runs     // number of times this convergence ran
+  stats.queue[0].timeout  // the timeout this convergence was given
+  stats.queue[0].always   // whether this convergence used .always()
+  stats.queue[0].value    // value returned from this convergence
 });
 ```
 
