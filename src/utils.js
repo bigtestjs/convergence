@@ -34,7 +34,7 @@ function collectStats(accumulator, stats) {
   accumulator.elapsed += stats.elapsed;
   accumulator.end = stats.end;
   accumulator.value = stats.value;
-  accumulator.stack.push(stats);
+  accumulator.queue.push(stats);
 
   return stats.value;
 }
@@ -60,17 +60,17 @@ function collectStats(accumulator, stats) {
  */
 export function isConvergence(obj) {
   return !!obj && typeof obj === 'object' &&
-    '_stack' in obj && Array.isArray(obj._stack) &&
+    '_queue' in obj && Array.isArray(obj._queue) &&
     'timeout' in obj && typeof obj.timeout === 'function' &&
     'run' in obj && typeof obj.run === 'function';
 }
 
 /**
- * Runs a single assertion from a convergence stack with `arg` as the
+ * Runs a single assertion from a convergence queue with `arg` as the
  * assertion's argument. Adds convergence stats to the `stats` object.
  *
  * @private
- * @param {Object} subject - Convergence assertion stack item
+ * @param {Object} subject - Convergence assertion queue item
  * @param {*} arg - Passed as the assertion's argument
  * @param {Object} stats - Stats accumulator object
  * @returns {Promise} Resolves with the assertion's return value
@@ -96,7 +96,7 @@ export function runAssertion(subject, arg, stats) {
 }
 
 /**
- * Runs a single function from a convergence stack with `arg` as the
+ * Runs a single function from a convergence queue with `arg` as the
  * function's argument. Adds simple stats to the `stats` object.
  *
  * When a promise is returned, the time it takes to resolve is
@@ -107,7 +107,7 @@ export function runAssertion(subject, arg, stats) {
  * is curried on.
  *
  * @private
- * @param {Object} subject - Convergence exec stack item
+ * @param {Object} subject - Convergence exec queue item
  * @param {*} arg - Passed as the function's argument
  * @param {Object} stats - Stats accumulator object
  * @returns {Promise} Resolves with the function's return value

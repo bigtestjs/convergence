@@ -100,15 +100,15 @@ class Convergence {
 
     let {
       timeout = previous._timeout || 2000,
-      _stack = []
+      _queue = []
     } = options;
 
-    // merge with the previous stack, if given
-    _stack = [...(previous._stack || []), ..._stack];
+    // merge with the previous queue, if given
+    _queue = [...(previous._queue || []), ..._queue];
 
     Object.defineProperties(this, {
       _timeout: { value: timeout },
-      _stack: { value: _stack }
+      _queue: { value: _queue }
     });
   }
 
@@ -156,7 +156,7 @@ class Convergence {
    */
   when(assertion) {
     return new this.constructor({
-      _stack: [{ assertion }]
+      _queue: [{ assertion }]
     }, this);
   }
 
@@ -203,7 +203,7 @@ class Convergence {
    */
   always(assertion, timeout) {
     return new this.constructor({
-      _stack: [{
+      _queue: [{
         always: true,
         assertion,
         timeout
@@ -213,10 +213,10 @@ class Convergence {
 
   /**
    * Returns a new convergence instance with a callback added to its
-   * stack. When a running convergence instance encounters a callback,
+   * queue. When a running convergence instance encounters a callback,
    * it will be invoked with the value returned from the last function
-   * in the stack. The resulting return value will also be provided to
-   * the following function in the stack.
+   * in the queue. The resulting return value will also be provided to
+   * the following function in the queue.
    *
    * ``` javascript
    * new Convergence()
@@ -277,12 +277,12 @@ class Convergence {
    */
   do(callback) {
     return new this.constructor({
-      _stack: [{ callback }]
+      _queue: [{ callback }]
     }, this);
   }
 
   /**
-   * Appends another convergence's stack to this convergence's stack
+   * Appends another convergence's queue to this convergence's queue
    * to allow composing different convergences together.
    *
    * ``` javascript
@@ -305,7 +305,7 @@ class Convergence {
     }
 
     return new this.constructor({
-      _stack: convergence._stack
+      _queue: convergence._queue
     }, this);
   }
 
@@ -351,8 +351,8 @@ class Convergence {
    *   stats.elapsed // amount of milliseconds the convergence took
    *   stats.timeout // the timeout this convergence used
    *   stats.runs    // total times this convergence ran an assertion
-   *   stats.value   // last returned value from the stack
-   *   stats.stack   // array of other stats for each assertion
+   *   stats.value   // last returned value from the queue
+   *   stats.queue   // array of other stats for each assertion
    * })
    * ```
    *
@@ -368,13 +368,13 @@ class Convergence {
       elapsed: 0,
       value: undefined,
       timeout: this._timeout,
-      stack: []
+      queue: []
     };
 
-    // reduce to a single promise that runs each item in the stack
-    return this._stack.reduce((promise, subject, i) => {
+    // reduce to a single promise that runs each item in the queue
+    return this._queue.reduce((promise, subject, i) => {
       // the last subject will receive the remaining timeout
-      if (i === (this._stack.length - 1)) {
+      if (i === (this._queue.length - 1)) {
         subject = Object.assign({ last: true }, subject);
       }
 
@@ -411,7 +411,7 @@ class Convergence {
    *
    * The convergence thennable method immediately invokes `#run()` and
    * resolves with the last returned value from the convergence's
-   * stack. This allows us to await for values from a convergence.
+   * queue. This allows us to await for values from a convergence.
    *
    * ``` javascript
    * let find = (selector) => new Convergence().when(() => {
@@ -429,7 +429,7 @@ class Convergence {
    * @returns {Promise}
    */
   then() {
-    // resolve with the value of the last function in the stack
+    // resolve with the value of the last function in the queue
     let promise = this.run().then(({ value }) => value);
     // pass promise arguments onward
     return promise.then.apply(promise, arguments);
