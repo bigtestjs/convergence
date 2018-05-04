@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+
+- "stack" terminology to "queue" to better reflect first-in-first-out
+
 ### Added
 
 - `when` and `always` helpers to immediately start converging on a
