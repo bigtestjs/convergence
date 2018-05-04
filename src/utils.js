@@ -1,4 +1,4 @@
-import convergeOn from './converge-on';
+import { when, always } from './converge';
 
 /**
  * Gets the elapsed time since a `start` time; throws if it exceeds
@@ -78,6 +78,7 @@ export function isConvergence(obj) {
 export function runAssertion(subject, arg, stats) {
   let timeout = stats.timeout - getElapsedSince(stats.start, stats.timeout);
   let assertion = subject.assertion.bind(this, arg);
+  let converge = subject.always ? always : when;
 
   // the last always uses the remaining timeout
   if (subject.always && !subject.last) {
@@ -90,7 +91,7 @@ export function runAssertion(subject, arg, stats) {
     }
   }
 
-  return convergeOn(assertion, timeout, subject.always)
+  return converge(assertion, timeout)
   // incorporate stats and curry the assertion return value
     .then((convergeStats) => collectStats(stats, convergeStats));
 }

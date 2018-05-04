@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+
+- `when` and `always` helpers to immediately start converging on a
+  single assertion without the need for creating a `Convergence`
+
+### Removed
+
+- `convergeOn` export in favor of `when` and `always`
+
 ## [0.8.0] - 2018-04-30
 
 ### Added
