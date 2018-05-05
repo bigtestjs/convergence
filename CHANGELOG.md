@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## [0.9.0] - 2018-05-05
+
 ### Changed
 
 - "stack" terminology to "queue" to better reflect first-in-first-out
