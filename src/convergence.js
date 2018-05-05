@@ -22,7 +22,7 @@ import {
  * By default, a convergence will converge before or after `2000ms`
  * depending on the type of assertions defined. This can be configured
  * by providing a timeout when initializing the convergence, or by
- * using the [`#timeout()`](#timeout) method.
+ * using the [`#timeout()`](#/Convergence#timeout) method.
  *
  * ``` javascript
  * new Convergence(100)
@@ -43,7 +43,7 @@ import {
  * Convergences are immutable, and as such, it's methods return new
  * instances. This allows you to compose multiple convergences and
  * start each of them separately using their respective
- * [`#run()`](#run) methods.
+ * [`#run()`](#/Convergence#run) methods.
  *
  * ``` javascript
  * let converge = new Convergence(300)
@@ -64,7 +64,7 @@ import {
  * ```
  *
  * Convergences are also thennable, which immediately invokes
- * [`#run()`](#run). This allows them to be able to be used anywhere
+ * [`#run()`](#/Convergence#run). This allows them to be able to be used anywhere
  * Promises can be used in most cases.
  *
  * ``` javascript
@@ -161,7 +161,7 @@ class Convergence {
   }
 
   /**
-   * Alias for [`#when()`
+   * Alias for [`#when()`](#/Convergence#when)
    *
    * @deprecated
    * @returns {Convergence} a new convergence instance
