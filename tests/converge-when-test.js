@@ -1,16 +1,16 @@
 import { describe, beforeEach, afterEach, it } from 'mocha';
 import { use, expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import convergeOn from '../src/converge-on';
+import { when } from '../src/converge';
 
 use(chaiAsPromised);
 
-describe('BigTest Convergence - convergeOn', () => {
+describe('BigTest Convergence - when', () => {
   let total, test, timeout;
 
   beforeEach(() => {
     total = 0;
-    test = (num) => convergeOn(() => {
+    test = (num) => when(() => {
       expect(total).to.equal(num);
     }, 50);
   });
@@ -45,7 +45,7 @@ describe('BigTest Convergence - convergeOn', () => {
   });
 
   it('resolves with a stats object', async () => {
-    test = (num) => convergeOn(() => total === 5 && total * 100);
+    test = (num) => when(() => total === 5 && total * 100);
     timeout = setTimeout(() => total = 5, 30);
 
     let start = Date.now();
@@ -61,32 +61,9 @@ describe('BigTest Convergence - convergeOn', () => {
     expect(stats.value).to.equal(500);
   });
 
-  describe('when `always` is true', () => {
-    beforeEach(() => {
-      total = 5;
-      test = (num) => convergeOn(() => {
-        expect(total).to.equal(num);
-      }, 50, true);
-    });
-
-    it('resolves if the assertion does not fail throughout the timeout', async () => {
-      let start = Date.now();
-      await expect(test(5)).to.be.fulfilled;
-      expect(Date.now() - start).to.be.within(50, 70);
-    });
-
-    it('rejects when the assertion fails within the timeout', async () => {
-      timeout = setTimeout(() => total = 0, 30);
-
-      let start = Date.now();
-      await expect(test(5)).to.be.rejected;
-      expect(Date.now() - start).to.be.within(30, 50);
-    });
-  });
-
   describe('when the assertion returns `false`', () => {
     beforeEach(() => {
-      test = (num) => convergeOn(() => total >= num, 50);
+      test = (num) => when(() => total >= num, 50);
     });
 
     it('rejects if `false` was continually returned', () => {
@@ -96,21 +73,6 @@ describe('BigTest Convergence - convergeOn', () => {
     it('resolves when `false` is not returned', () => {
       timeout = setTimeout(() => total = 10, 30);
       return expect(test(10)).to.be.fulfilled;
-    });
-
-    describe('and `always` is true', () => {
-      beforeEach(() => {
-        test = (num) => convergeOn(() => total < num, 50, true);
-      });
-
-      it('resolves if `false` was never returned', () => {
-        return expect(test(10)).to.be.fulfilled;
-      });
-
-      it('rejects when `false` is returned', () => {
-        timeout = setTimeout(() => total = 10, 30);
-        return expect(test(10)).to.be.rejectedWith('convergent assertion returned `false`');
-      });
     });
   });
 
@@ -131,20 +93,10 @@ describe('BigTest Convergence - convergeOn', () => {
       await expect(
         // 5-10ms latencies start causing an increasing amount of
         // flakiness, anything higher fails more often than not
-        convergeOn(() => !!latency(20), 50)
+        when(() => !!latency(20), 50)
       ).to.be.rejected;
 
       // 10ms loop interval + 20ms latency = ~+30ms final latency
-      expect(Date.now() - start).to.be.within(50, 80);
-    });
-
-    it('using always resolves as soon as it can after the timeout', async () => {
-      let start = Date.now();
-
-      await expect(
-        convergeOn(() => latency(20), 50, true)
-      ).to.be.fulfilled;
-
       expect(Date.now() - start).to.be.within(50, 80);
     });
   });

@@ -306,10 +306,62 @@ _Note: functions added using `.do()` produce a small stats object as
 well, but they omit `runs`, `timeout`, and `always` since they do not
 apply to these functions._
 
-## Advanced
+### Helpers
 
-### `convergeOn`
+In addition to the `Convergence` class, this package also exports a
+few convergence helpers.
 
-This is a low-level API used by `Convergence` and you probably don't
-need it. If you think you do, get in touch. If you'd just like to know
-how it works, check out [the source](https://github.com/thefrontside/bigtest/blob/master/packages/convergence/src/converge-on.js).
+**`isConvergence(object)`**
+
+Returns `true` if the given `object` implements a `Convergence`
+interface. A `Convergence` interface consists of a queue, a
+`#timeout()` method, and a `#run()` method.
+
+``` javascript
+class CustomConvergence extends Convergence() {
+  ...
+}
+
+isConvergence(new Convergence()) // => true
+isConvergence(new CustomConvergence()) // => true
+isConvergence(new Array()) // => false
+```
+
+**`when(assertion[, timeout=2000])`**
+
+Starts converging on the given `assertion`, resolving when it passes
+_within_ the timeout period. The assertion will run once every 10ms
+and is considered to be passing when it does not error or return
+false. If the assertion never passes within the timeout period, the
+promise will reject as soon as it can with the last error it recieved.
+
+``` javascript
+// simple boolean test
+await when(() => total === 100)
+
+// with chai assertions
+await when(() => {
+  expect(total).to.equal(100)
+  expect(add(total, 1)).to.equal(101)
+})
+```
+
+**`always(assertion[, timeout=200])`**
+
+Starts converging on the given `assertion`, resolving when it passes
+_throughout_ the timeout period. Like `when()`, The assertion will run
+once every 10ms and is considered to be passing when it does not error
+or return false. However, if the assertion does not pass consistently
+throughout the entire timeout period, it will reject the very first
+time it encounters a failure.
+
+```javascript
+// simple boolean test
+await always(() => total !== 100)
+
+// with chai assertions
+await always(() => {
+  expect(total).to.not.equal(100)
+  expect(add(total, 1)).to.equal(101)
+})
+```
