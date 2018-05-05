@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## [0.9.1] - 2018-05-05
+
+### Changed
+
+- internal docs links
+- update `@bigtest/meta`
+
 ## [0.9.0] - 2018-05-05
 
 ### Changed
