@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## [0.10.0] - 2018-07-05
+
 ### Added
 
 - error when using async functions or returning promises with
