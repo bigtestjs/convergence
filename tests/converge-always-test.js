@@ -35,6 +35,14 @@ describe('BigTest Convergence - always', () => {
     expect(Date.now() - start).to.be.within(30, 50);
   });
 
+  it('rejects with an error when using an async function', () => {
+    expect(always(async () => {})).to.be.rejectedWith(/async/);
+  });
+
+  it('rejects with an error when returning a promise', () => {
+    expect(always(() => Promise.resolve())).to.be.rejectedWith(/promise/);
+  });
+
   it('resolves with a stats object', async () => {
     let start = Date.now();
     let stats = await expect(test(5)).to.be.fulfilled;

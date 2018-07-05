@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+
+- error when using async functions or returning promises with
+  convergent assertions
+
 ## [0.9.1] - 2018-05-05
 
 ### Changed
@@ -21,7 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Added
 
 - `when` and `always` helpers to immediately start converging on a
-  single assertion without the need for creating a `Convergence`
+single assertion without the need for creating a `Convergence`
 
 ### Removed
 
@@ -37,7 +42,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 
 - `_timeout` to `timeout` when providing an options hash to the
-  convergence constructor
+convergence constructor
 
 ## [0.7.0] - 2018-04-07
 
@@ -83,7 +88,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 
 - convergent assertions no longer attempt to resolve or reject before
-  their timeout
+their timeout
 
 ## [0.3.0] - 2018-02-18
 
@@ -94,7 +99,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 
 - convergence constructor to be more general to allow subclasses to
-  handle their own construction
+handle their own construction
 
 ## [0.2.0] - 2018-02-16
 
@@ -103,7 +108,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - `.append()` method to combine convergences together
 
 - "module" entry point to support native consumption of @bigtest/mocha
-  as es module
+as es module
 
 ### Fixed
 
