@@ -274,6 +274,14 @@ describe('BigTest Convergence', () => {
         return expect(assertion.run()).to.be.fulfilled;
       });
 
+      it('rejects with an error when using an async function', () => {
+        expect(converge.when(async () => {}).run()).to.be.rejectedWith(/async/);
+      });
+
+      it('rejects with an error when returning a promise', () => {
+        expect(converge.when(() => Promise.resolve()).run()).to.be.rejectedWith(/promise/);
+      });
+
       describe('with additional chaining', () => {
         beforeEach(() => {
           assertion = assertion.when(() => expect(total).to.equal(10));
@@ -326,6 +334,14 @@ describe('BigTest Convergence', () => {
         let start = Date.now();
         await expect(assertion.run()).to.be.rejected;
         expect(Date.now() - start).to.be.within(50, 70);
+      });
+
+      it('rejects with an error when using an async function', () => {
+        expect(converge.always(async () => {}).run()).to.be.rejectedWith(/async/);
+      });
+
+      it('rejects with an error when returning a promise', () => {
+        expect(converge.always(() => Promise.resolve()).run()).to.be.rejectedWith(/promise/);
       });
 
       describe('with additional chaining', () => {

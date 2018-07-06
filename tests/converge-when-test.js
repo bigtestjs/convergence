@@ -44,6 +44,14 @@ describe('BigTest Convergence - when', () => {
     expect(Date.now() - start).to.be.within(50, 70);
   });
 
+  it('rejects with an error when using an async function', () => {
+    expect(when(async () => {})).to.be.rejectedWith(/async/);
+  });
+
+  it('rejects with an error when returning a promise', () => {
+    expect(when(() => Promise.resolve())).to.be.rejectedWith(/promise/);
+  });
+
   it('resolves with a stats object', async () => {
     test = (num) => when(() => total === 5 && total * 100);
     timeout = setTimeout(() => total = 5, 30);

@@ -43,6 +43,15 @@ export function convergeOn(assertion, timeout, always) {
       try {
         let results = assertion();
 
+        // a promise means there could be side-effects
+        if (results && typeof results.then === 'function') {
+          throw new Error(
+            'convergent assertion encountered a async function or promise; ' +
+            'since convergent assertions can run multiple times, you should ' +
+            'avoid introducing side-effects inside of them'
+          );
+        }
+
         // the timeout calculation comes after the assertion so that
         // the assertion's execution time is accounted for
         let doLoop = Date.now() - start < timeout;
