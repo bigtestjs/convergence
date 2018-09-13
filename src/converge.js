@@ -23,6 +23,7 @@
 export function convergeOn(assertion, timeout, always) {
   let start = Date.now();
   let interval = 10;
+  let bail = false;
 
   // track various stats
   let stats = {
@@ -43,8 +44,10 @@ export function convergeOn(assertion, timeout, always) {
       try {
         let results = assertion();
 
-        // a promise means there could be side-effects
+        // a promise means there could be side-effects; bail
         if (results && typeof results.then === 'function') {
+          bail = true;
+
           throw new Error(
             'convergent assertion encountered a async function or promise; ' +
             'since convergent assertions can run multiple times, you should ' +
@@ -75,9 +78,9 @@ export function convergeOn(assertion, timeout, always) {
       } catch (error) {
         let doLoop = Date.now() - start < timeout;
 
-        if (!always && doLoop) {
+        if (!bail && !always && doLoop) {
           setTimeout(loop, interval);
-        } else if (always || !doLoop) {
+        } else if (bail || always || !doLoop) {
           reject(error);
         }
       }
