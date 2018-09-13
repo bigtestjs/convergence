@@ -346,6 +346,20 @@ await when(() => {
 })
 ```
 
+Returns a thennable function that can both be used as a callback and
+awaited on directly. For example, testing frameworks that support
+async tests work well with convergent assertions.
+
+``` javascript
+test('will eventually become bar within 1s', when(() => {
+  expect(foo).to.equal('bar');
+}, 1000));
+```
+
+_Note: `when` will throw an error **after** it fails to converge
+within the timeout. When using with testing frameworks, be aware of
+any test timeouts that may occur before the convergence fails._
+
 **`always(assertion[, timeout=200])`**
 
 Starts converging on the given `assertion`, resolving when it passes
@@ -365,3 +379,16 @@ await always(() => {
   expect(add(total, 1)).to.equal(101)
 })
 ```
+
+Also returns a thennable function that can both be used as a callback
+and awaited on directly.
+
+``` javascript
+test('remains foo for at least 1s', always(() => {
+  expect(foo).to.equal('foo');
+}, 1000));
+```
+
+_Note: `always` will resolve **after** it converges throughout the
+entire timeout. When using with testing frameworks, be aware of any
+test timeouts that may occur before the convergence resolves._
