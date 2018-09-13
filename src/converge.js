@@ -89,6 +89,20 @@ export function convergeOn(assertion, timeout, always) {
 }
 
 /**
+ * Helper to make a function thannable which will invoke itself and
+ * call `.then` on the results.
+ *
+ * @private
+ * @param {Function} fn - Function to make thennable
+ * @returns {Function} function with a then method
+ */
+function thennable(fn) {
+  return Object.defineProperty(fn, 'then', {
+    value: (...args) => fn().then(...args)
+  });
+}
+
+/**
  * Converges on an assertion by resolving when the given assertion
  * passes _within_ the timeout period. The assertion will run once
  * every 10ms and is considered to be passing when it does not error
@@ -115,13 +129,24 @@ export function convergeOn(assertion, timeout, always) {
  * await when(() => num === 1, 100)
  * ```
  *
+ * Returns a thennable function that can be used as a callback where
+ * libraries support async functions.
+ *
+ * ```javascript
+ * // mocha's `it` supports async tests
+ * it('becomes bar within one second', when(() => {
+ *   expect(foo).to.equal('bar');
+ * }, 1000));
+ * ```
+ *
  * @function when
  * @param {Function} assertion - Assertion to converge on
  * @param {Number} [timeout=2000] - Timeout in milliseconds
- * @returns {Promise} - Resolves when the assertion converges
+ * @returns {Function} thennable function that resolves when the
+ * assertion converges
  */
 export function when(assertion, timeout = 2000) {
-  return convergeOn(assertion, timeout, false);
+  return thennable(() => convergeOn(assertion, timeout, false));
 }
 
 /**
@@ -151,11 +176,22 @@ export function when(assertion, timeout = 2000) {
  * await always(() => num < 100, 2000)
  * ```
  *
+ * Returns a thennable function that can be used as a callback where
+ * libraries support async functions.
+ *
+ * ```javascript
+ * // mocha's `it` supports async tests
+ * it('stays foo for one second', always(() => {
+ *   expect(foo).to.equal('foo');
+ * }, 1000));
+ * ```
+ *
  * @function always
  * @param {Function} assertion - Assertion to converge with
  * @param {Number} [timeout=200] - Timeout in milliseconds
- * @returns {Promise} - Resolves when the assertion converges
+ * @returns {Function} thennable function that resolves when the
+ * assertion converges
  */
 export function always(assertion, timeout = 200) {
-  return convergeOn(assertion, timeout, true);
+  return thennable(() => convergeOn(assertion, timeout, true));
 }

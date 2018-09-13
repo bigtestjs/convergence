@@ -21,6 +21,13 @@ describe('BigTest Convergence - always', () => {
     }
   });
 
+  it('returns a thennable function', () => {
+    expect(test(5)).to.be.a('function');
+    expect(test(5)).to.have.property('then').that.is.a('function');
+    expect(test(5)()).to.be.an.instanceof(Promise);
+    expect(test(5).then(() => {})).to.be.an.instanceof(Promise);
+  });
+
   it('resolves if the assertion does not fail throughout the timeout', async () => {
     let start = Date.now();
     await expect(test(5)).to.be.fulfilled;
