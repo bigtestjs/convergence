@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - immediately throw when encountering an async assertion
 - `when` and `always` helpers return thennable functions that can be
   used as callbacks, or awaited on directly
+- updated to stable dependencies
 
 ## [0.10.0] - 2018-07-05
 
