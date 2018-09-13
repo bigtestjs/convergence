@@ -161,17 +161,6 @@ class Convergence {
   }
 
   /**
-   * Alias for [`#when()`](#/Convergence#when)
-   *
-   * @deprecated
-   * @returns {Convergence} a new convergence instance
-   */
-  once() {
-    console.warn('#once() has been deprecated in favor of #when()');
-    return this.when(...arguments);
-  }
-
-  /**
    * Returns a new convergence instance with an additional assertion.
    * This assertion is run repeatedly to ensure it passes throughout
    * the timeout. If the assertion fails at any point during the

@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
   used as callbacks, or awaited on directly
 - updated to stable dependencies
 
+### Removed
+
+- deprecated `once` method
+
 ## [0.10.0] - 2018-07-05
 
 ### Added
