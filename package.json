@@ -6,7 +6,6 @@
   "repository": "https://github.com/bigtestjs/convergence",
   "main": "dist/umd/index.js",
   "module": "dist/esm/index.js",
-  "types": "types/index.d.ts",
   "files": [
     "dist",
     "docs",
