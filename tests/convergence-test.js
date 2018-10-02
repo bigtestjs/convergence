@@ -311,7 +311,7 @@ describe('BigTest Convergence', () => {
         total = 5;
         assertion = converge.always(() => {
           expect(total).to.equal(5);
-        }, 50);
+        });
       });
 
       it('retains the instance context', () => {
@@ -344,14 +344,14 @@ describe('BigTest Convergence', () => {
         expect(converge.always(() => Promise.resolve()).run()).to.be.rejectedWith(/promise/);
       });
 
-      describe('with additional chaining', () => {
+      describe('with a timeout', () => {
         beforeEach(() => {
-          assertion = assertion
-            .do(() => total = 10)
-            .when(() => expect(total).to.equal(10));
+          assertion = converge.always(() => {
+            expect(total).to.equal(5);
+          }, 50);
         });
 
-        it('resolves after at least 50ms', async () => {
+        it('resolves after the 50ms timeout', async () => {
           let start = Date.now();
           await expect(assertion.run()).to.be.fulfilled;
           expect(Date.now() - start).to.be.within(50, 70);
@@ -363,6 +363,24 @@ describe('BigTest Convergence', () => {
           let start = Date.now();
           await expect(assertion.run()).to.be.rejected;
           expect(Date.now() - start).to.be.within(30, 50);
+        });
+      });
+
+      describe('with additional chaining', () => {
+        beforeEach(() => {
+          assertion = assertion.do(() => {});
+        });
+
+        it('resolves after one-tenth the total timeout', async () => {
+          let start = Date.now();
+          await expect(assertion.timeout(1000).run()).to.be.fulfilled;
+          expect(Date.now() - start).to.be.within(100, 120);
+        });
+
+        it('resolves after at minumum 20ms', async () => {
+          let start = Date.now();
+          await expect(assertion.run()).to.be.fulfilled;
+          expect(Date.now() - start).to.be.within(20, 40);
         });
       });
     });
