@@ -217,7 +217,8 @@ class Convergence {
    * queue. When a running convergence instance encounters a callback,
    * it will be invoked with the value returned from the last function
    * in the queue. The resulting return value will also be provided to
-   * the following function in the queue.
+   * the following function in the queue. If the return value is
+   * undefined, the previous return value will be retained.
    *
    * ``` javascript
    * new Convergence()
@@ -226,21 +227,19 @@ class Convergence {
    *     let n = Math.ceil(Math.random() * 100)
    *     return !(n % 2) && n
    *   })
-   *   // logs the number and continues
+   *   // multiplies the even number by another random number
    *   .do((even) => {
-   *     console.log('random even number between 1 and 100', even)
-   *     return even
+   *     return even * Math.ceil(Math.random() * 100)
+   *   })
+   *   // does not return, the previous value will be retained
+   *   .do((rand) => {
+   *     console.log('even number times random number = ', rand);
    *   })
    *   // asserts that any number times an even number is even
-   *   .always((even) => {
-   *     let n = Math.ceil(Math.random() * 100)
-   *     let rand = n * even
-   *     return !(rand % 2) && rand
+   *   .always((rand) => {
+   *     let rand = Math.ceil(Math.random() * 100);
+   *     return !(rand % 2)
    *   }, 100)
-   *   // after 100ms logs the new random even number
-   *   .do((even) => {
-   *     console.log('new random even number', even)
-   *   })
    * ```
    *
    * When a promise is returned from a callback, the convergence will
@@ -379,7 +378,7 @@ class Convergence {
         subject = Object.assign({ last: true }, subject);
       }
 
-      return promise.then((ret) => {
+      return promise.then(ret => {
         if (subject.assertion) {
           return runAssertion.call(this, subject, ret, stats);
         } else if (subject.callback) {

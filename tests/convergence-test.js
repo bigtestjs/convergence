@@ -181,7 +181,7 @@ describe('BigTest Convergence', () => {
         expect(converge._queue).to.have.lengthOf(0);
       });
 
-      it('adds to a new queue with an `exec` property', () => {
+      it('adds to a new queue with a `callback` property', () => {
         let fn = () => {};
 
         callback = callback.do(fn);
@@ -578,6 +578,29 @@ describe('BigTest Convergence', () => {
 
         await expect(assertion.run()).to.be.fulfilled;
         expect(arr).to.deep.equal(['first', 'second']);
+      });
+
+      it('curries previous return values through the stack', async () => {
+        await expect(
+          converge
+            .when(() => true)
+            .do(foo => !foo)
+            .always(foo => foo.toString())
+            // undefined returns curry the value
+            .when(foo => {
+              expect(foo).to.equal('false');
+            })
+            .do(foo => {
+              expect(foo).to.equal('false');
+            })
+            .always(foo => {
+              expect(foo).to.equal('false');
+              return null;
+            })
+            .do(foo => {
+              expect(foo).to.be.null;
+            })
+        ).to.be.fulfilled;
       });
     });
   });
