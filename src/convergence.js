@@ -172,10 +172,20 @@ class Convergence {
    * ```
    *
    * When an always assertion is encountered at the end of a
-   * convergence, it is given the remaining timeout of the current
-   * running instance. When it is not at the end, the provided `timeout`
-   * is used instead. It has a minimum of `20ms`, and defaults to
-   * one-tenth of the total timeout if not provided.
+   * convergence, the timeout defaults to the remaining time for the
+   * current running instance; minumum `20ms`. When not at the ned of
+   * a convergence, it defaults to one-tenth of the total timeout.
+   *
+   * ``` javascript
+   * let convergeFooThenBar = new Convergence(1000)
+   * // would continue after `foo` remains `'foo'` for at least 100ms
+   *   .always(() => foo === 'foo')
+   * // then have any time remaining to converge on `foo` being `'bar'`
+   *   .when(() => foo === 'bar')
+   * ```
+   *
+   * Given a timeout, it is capped at the remaining timeout for the
+   * current running instance.
    *
    * ``` javascript
    * let convergeFooThenBar = new Convergence(100)
@@ -183,11 +193,13 @@ class Convergence {
    *   .always(() => foo === 'foo', 50)
    * // then have 50ms remaining to converge on `foo` being `'bar'`
    *   .when(() => foo === 'bar')
+   * // and a maximum of ~50ms to converge on it remaining `bar`
+   *   .always(() => foo === 'bar', 100)
    * ```
    *
    * @param {Function} assertion - The assertion to converge on
-   * @param {Number} [timeout] - The timeout to use when not run at
-   * then end of the convergence
+   * @param {Number} [timeout] - The timeout to use, capped at the
+   * remaining timeout.
    * @returns {Convergence} A new convergence instance
    */
   always(assertion, timeout) {

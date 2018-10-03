@@ -165,10 +165,9 @@ converge.always(() => total === 5)
 ```
 
 When a convergence added with `.always()` is last in the queue, it
-will be given the remaining total timeout to converge on its assertion
-always passing. When it _is not_ last in the queue, `timeout` is used
-instead. By default, `timeout` will be a tenth of the total timeout
-or `20ms` (whichever is greater).
+will default to the remaining timeout to converge on its assertion
+always passing. When it _is not_ last in the queue, `timeout` defaults
+to one-tenth of the total timeout or `20ms` (whichever is greater).
 
 ``` javascript
 converge
@@ -176,15 +175,14 @@ converge
   .always(() => total === 5)
 
 converge
-  // will use the 500ms timeout instead
+  // waits 500ms
   .always(() => total === 5, 500)
-  .when(() => total === 10)
 
-new Convergence(2000)
-  // defaults to 200ms
+converge
+  .timeout(2000)
+  // defaults to 200ms (one-tenth 2000ms)
   .always(() => total === 5)
-  // this counts as part of the queue
-  .do(() => console.log(total))
+  .when(() => total === 10)
 ```
 
 **`.do(exec)`**

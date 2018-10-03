@@ -80,13 +80,13 @@ export function runAssertion(subject, arg, stats) {
   let assertion = subject.assertion.bind(this, arg);
   let converge = subject.always ? always : when;
 
-  // the last always uses the remaining timeout
-  if (subject.always && !subject.last) {
-    // timeout needs to be smaller than the total timeout
+  // always defaults to one-tenth or the remaining timeout
+  if (subject.always) {
     if (subject.timeout) {
+      // ensure the timeout is shorter than the remaining
       timeout = Math.min(timeout, subject.timeout);
-      // default the timeout to one-tenth the total, or 20ms min
-    } else {
+    } else if (!subject.last) {
+      // default to one-tenth the total, minimum 20ms
       timeout = Math.max(stats.timeout / 10, 20);
     }
   }

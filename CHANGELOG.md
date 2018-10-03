@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+
+- trailing `always` assertions on Convergence instances default to
+  remaining time instead of always using remaining time
+
 ## [1.0.0] - 2018-09-13
 
 ### Changed
