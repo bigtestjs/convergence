@@ -22,21 +22,24 @@ function getElapsedSince(start, max) {
 };
 
 /**
- * Adds stats to the accumulator and returns `stats.value`
+ * Adds stats to the accumulator and returns `stats.value`. If
+ * `stats.value` is undefined, `ret` is returned.
  *
  * @private
  * @param {Object} accumulator - Stats accumulator
  * @param {Object} stats - New stats to add
+ * @param {*} ret - Return value when `stats.value` is undefined
  * @returns {*}
  */
-function collectStats(accumulator, stats) {
+function collectStats(accumulator, stats, ret) {
   accumulator.runs += stats.runs;
   accumulator.elapsed += stats.elapsed;
   accumulator.end = stats.end;
   accumulator.value = stats.value;
   accumulator.queue.push(stats);
 
-  return stats.value;
+  return typeof stats.value !== 'undefined'
+    ? stats.value : ret;
 }
 
 /**
@@ -93,7 +96,7 @@ export function runAssertion(subject, arg, stats) {
 
   return converge(assertion, timeout)
   // incorporate stats and curry the assertion return value
-    .then((convergeStats) => collectStats(stats, convergeStats));
+    .then((convergeStats) => collectStats(stats, convergeStats, arg));
 }
 
 /**
@@ -117,14 +120,14 @@ export function runCallback(subject, arg, stats) {
   let start = Date.now();
   let result = subject.callback.call(this, arg);
 
-  let collectExecStats = (value) => {
+  let collectExecStats = value => {
     return collectStats(stats, {
       start,
       runs: 1,
       end: Date.now(),
       elapsed: getElapsedSince(start, stats.timeout),
       value
-    });
+    }, arg);
   };
 
   // a convergence is called with the current remaining timeout
@@ -139,7 +142,7 @@ export function runCallback(subject, arg, stats) {
 
     return result.timeout(timeout).run()
     // incorporate stats and curry the return value
-      .then((convergeStats) => collectStats(stats, convergeStats));
+      .then(convergeStats => collectStats(stats, convergeStats, arg));
 
   // a promise will need to settle first
   } else if (result && typeof result.then === 'function') {
