@@ -1,5 +1,7 @@
 import { when, always } from './converge';
 
+const { now } = Date;
+
 /**
  * Gets the elapsed time since a `start` time; throws if it exceeds
  * the allowed `max` timeout.
@@ -11,7 +13,7 @@ import { when, always } from './converge';
  * @throws {Error} If the elapsed time exceeds `max`
  */
 function getElapsedSince(start, max) {
-  let elapsed = Date.now() - start;
+  let elapsed = now() - start;
 
   // we shouldn't continue beyond the timeout
   if (elapsed >= max) {
@@ -117,14 +119,14 @@ export function runAssertion(subject, arg, stats) {
  * @returns {Promise} Resolves with the function's return value
  */
 export function runCallback(subject, arg, stats) {
-  let start = Date.now();
+  let start = now();
   let result = subject.callback.call(this, arg);
 
   let collectExecStats = value => {
     return collectStats(stats, {
       start,
       runs: 1,
-      end: Date.now(),
+      end: now(),
       elapsed: getElapsedSince(start, stats.timeout),
       value
     }, arg);
