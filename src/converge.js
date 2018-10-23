@@ -1,3 +1,5 @@
+const { now } = Date;
+
 /**
  * Captures a promise that will only resolve once a given condition
  * has been met. The condition will be tested once every 10ms and is
@@ -21,7 +23,7 @@
  * if `always` is true, then rejects at the first error instead
  */
 export function convergeOn(assertion, timeout, always) {
-  let start = Date.now();
+  let start = now();
   let interval = 10;
   let bail = false;
 
@@ -57,7 +59,7 @@ export function convergeOn(assertion, timeout, always) {
 
         // the timeout calculation comes after the assertion so that
         // the assertion's execution time is accounted for
-        let doLoop = Date.now() - start < timeout;
+        let doLoop = now() - start < timeout;
 
         if (always && doLoop) {
           setTimeout(loop, interval);
@@ -70,13 +72,13 @@ export function convergeOn(assertion, timeout, always) {
           );
         } else {
           // calculate some stats right before resolving with them
-          stats.end = Date.now();
+          stats.end = now();
           stats.elapsed = stats.end - start;
           stats.value = results;
           resolve(stats);
         }
       } catch (error) {
-        let doLoop = Date.now() - start < timeout;
+        let doLoop = now() - start < timeout;
 
         if (!bail && !always && doLoop) {
           setTimeout(loop, interval);
