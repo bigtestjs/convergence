@@ -58,6 +58,14 @@ jobs:
             - convergence/dist
             - convergence/docs
 
+  check-types:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: Check TypeScript definition
+          command: yarn check-types
+
   test:
     <<: *defaults
     steps:
@@ -91,6 +99,9 @@ workflows:
           requires:
             - install
       - test:
+          requires:
+            - install
+      - check-types:
           requires:
             - install
       - deploy:
