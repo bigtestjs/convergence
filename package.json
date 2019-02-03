@@ -17,7 +17,8 @@
     "docs": "bigtest-docs",
     "lint": "eslint --ignore-path .gitignore ./",
     "postpublish": "bigtest-tag-version",
-    "test": "mocha --opts ./tests/mocha.opts ./tests"
+    "test": "mocha --opts ./tests/mocha.opts ./tests",
+    "check-types": "tsc"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
@@ -35,6 +36,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^4.0.1",
     "rollup": "^0.53.0",
-    "rollup-plugin-babel": "^4.0.0"
+    "rollup-plugin-babel": "^4.0.0",
+    "typescript": "^3.3.1"
   }
 }
