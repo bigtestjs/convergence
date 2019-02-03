@@ -4,6 +4,8 @@ import {
   runCallback
 } from './utils';
 
+const { now } = Date;
+
 /**
  * ```
  * import Convergence from '@bigtest/convergence'
@@ -359,7 +361,7 @@ class Convergence {
    * @returns {Promise}
    */
   run() {
-    let start = Date.now();
+    let start = now();
 
     let stats = {
       start,

@@ -100,4 +100,18 @@ describe('BigTest Convergence - always', () => {
       expect(Date.now() - start).to.be.within(50, 80);
     });
   });
+
+  describe('with a mocked date object', () => {
+    beforeEach(() => {
+      global.Date = { _og: global.Date };
+    });
+
+    afterEach(() => {
+      global.Date = global.Date._og;
+    });
+
+    it('resolves when the assertion passes', async () => {
+      await expect(test(5)).to.be.fulfilled;
+    });
+  });
 });

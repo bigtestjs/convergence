@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## [1.1.1] - 2018-10-23
+
+### Fixed
+
+- global Date reference which caused date & time mocking to break
+  convergences
+
+## [1.1.0] - 2018-10-04
+
 ### Added
 
 - queued functions retain the previous value when returning undefined
