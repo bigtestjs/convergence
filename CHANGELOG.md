@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Fixed
+
+- Make sure $root descriptor function is not wrapped in the chaining mechanism 
+
 ## [1.1.1] - 2018-10-23
 
 ### Fixed
