@@ -6,17 +6,24 @@
   "repository": "https://github.com/bigtestjs/convergence",
   "main": "dist/umd/index.js",
   "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "docs",
     "src"
   ],
   "scripts": {
-    "build": "rollup --config",
+    "build": "run-p build:*",
+    "build:js": "rollup -c",
+    "build:dts": "tsc -p tsconfig.dts.json",
     "docs": "bigtest-docs",
     "lint": "eslint --ignore-path .gitignore ./",
+    "problems": "tsc --noEmit",
     "postpublish": "bigtest-tag-version",
-    "test": "mocha --opts ./tests/mocha.opts ./tests"
+    "pretest": "rollup -c rollup.test.config.js",
+    "test": "mocha --opts ./tests/mocha.opts './tmp/tests.js'",
+    "verify": "run-p --aggregate-output lint problems test",
+    "prepublishOnly": "yarn verify && yarn build"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
@@ -24,6 +31,10 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/register": "^7.0.0",
     "@bigtest/meta": "bigtestjs/meta",
+    "@types/chai": "^4.2.0",
+    "@types/chai-as-promised": "^7.1.2",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.7.4",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "eslint": "^4.16.0",
@@ -33,7 +44,12 @@
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^4.0.1",
-    "rollup": "^0.53.0",
-    "rollup-plugin-babel": "^4.0.0"
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.21.4",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-multi-entry": "^2.1.0",
+    "rollup-plugin-typescript": "^1.0.1",
+    "tslib": "^1.10.0",
+    "typescript": "^3.5.3"
   }
 }
