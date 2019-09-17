@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it } from 'mocha';
 import { use, expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import Convergence from '../src/convergence';
+import * as chaiAsPromised from 'chai-as-promised';
+import Convergence, { IOptions } from '../src/convergence';
 
 use(chaiAsPromised);
 
@@ -29,10 +29,12 @@ describe('BigTest Convergence', () => {
   });
 
   describe('extending convergences', () => {
-    let custom;
+    let custom: CustomConvergence;
 
     class CustomConvergence extends Convergence {
-      constructor(options = {}, prev = {}) {
+      test: any;
+
+      constructor(options: IOptions & { test: any }, prev: any = {}) {
         super(options, prev);
 
         Object.defineProperty(this, 'test', {
@@ -40,8 +42,8 @@ describe('BigTest Convergence', () => {
         });
       }
 
-      setTest(test) {
-        return new this.constructor({ test }, this);
+      setTest(test: any) {
+        return Reflect.construct(this.constructor, [{ test }, this]);
       }
     }
 
@@ -85,14 +87,14 @@ describe('BigTest Convergence', () => {
   });
 
   describe('with an existing instance', () => {
-    let converge;
+    let converge: Convergence;
 
     beforeEach(() => {
       converge = new Convergence();
     });
 
     describe('setting a new timeout', () => {
-      let quick;
+      let quick: Convergence;
 
       beforeEach(() => {
         quick = converge.timeout(50);
@@ -110,10 +112,10 @@ describe('BigTest Convergence', () => {
     });
 
     describe('adding assertions with `.when()`', () => {
-      let assertion;
+      let assertion: Convergence;
 
       beforeEach(() => {
-        assertion = converge.when(() => {});
+        assertion = converge.when(() => false);
       });
 
       it('creates a new instance', () => {
@@ -128,7 +130,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('adds the assertion to the new queue', () => {
-        let assert = () => {};
+        let assert = () => false;
 
         assertion = assertion.when(assert);
         expect(assertion._queue[1]).to.have.property('assertion', assert);
@@ -136,10 +138,10 @@ describe('BigTest Convergence', () => {
     });
 
     describe('adding assertions with `.always()`', () => {
-      let assertion;
+      let assertion: Convergence;
 
       beforeEach(() => {
-        assertion = converge.always(() => {});
+        assertion = converge.always(() => false);
       });
 
       it('creates a new instance', () => {
@@ -154,7 +156,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('adds to a new queue with an `always` flag and own timeout', () => {
-        let assert = () => {};
+        let assert = () => false;
 
         assertion = assertion.always(assert, 200);
         expect(assertion._queue[1]).to.have.property('assertion', assert);
@@ -164,10 +166,10 @@ describe('BigTest Convergence', () => {
     });
 
     describe('adding callbacks with `.do()`', () => {
-      let callback;
+      let callback: Convergence;
 
       beforeEach(() => {
-        callback = converge.do(() => {});
+        callback = converge.do(() => { });
       });
 
       it('creates a new instance', () => {
@@ -182,7 +184,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('adds to a new queue with a `callback` property', () => {
-        let fn = () => {};
+        let fn = () => { };
 
         callback = callback.do(fn);
         expect(callback._queue[1]).to.have.property('callback', fn);
@@ -190,11 +192,11 @@ describe('BigTest Convergence', () => {
     });
 
     describe('combining convergences with `.append()`', () => {
-      let combined;
+      let combined: Convergence;
 
       beforeEach(() => {
         combined = converge.append(
-          new Convergence().when(() => {})
+          new Convergence().when(() => false)
         );
       });
 
@@ -210,7 +212,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('combines the two queues', () => {
-        let fn = () => {};
+        let fn = () => { };
 
         combined = combined.append(
           new Convergence().do(fn)
@@ -222,9 +224,9 @@ describe('BigTest Convergence', () => {
   });
 
   describe('running convergences', () => {
-    let total, converge, timeouts;
-    let createTimeout = (...args) => {
-      timeouts.push(setTimeout(...args));
+    let total: number, converge: Convergence, timeouts: number[];
+    let createTimeout = (handler: TimerHandler, timeout?: number | undefined) => {
+      timeouts.push(setTimeout(handler, timeout));
     };
 
     beforeEach(() => {
@@ -248,7 +250,7 @@ describe('BigTest Convergence', () => {
     });
 
     describe('after using `.when()`', () => {
-      let assertion;
+      let assertion: Convergence;
 
       beforeEach(() => {
         assertion = converge.when(() => expect(total).to.equal(5));
@@ -267,7 +269,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('retains the instance context', () => {
-        assertion = converge.when(function() {
+        assertion = converge.when(function () {
           expect(this).to.equal(assertion);
         });
 
@@ -275,7 +277,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('rejects with an error when using an async function', () => {
-        expect(converge.when(async () => {}).run()).to.be.rejectedWith(/async/);
+        expect(converge.when(async () => { }).run()).to.be.rejectedWith(/async/);
       });
 
       it('rejects with an error when returning a promise', () => {
@@ -305,7 +307,7 @@ describe('BigTest Convergence', () => {
     });
 
     describe('after using `.always()`', () => {
-      let assertion;
+      let assertion: Convergence;
 
       beforeEach(() => {
         total = 5;
@@ -315,7 +317,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('retains the instance context', () => {
-        assertion = converge.always(function() {
+        assertion = converge.always(function () {
           expect(this).to.equal(assertion);
         });
 
@@ -337,7 +339,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('rejects with an error when using an async function', () => {
-        expect(converge.always(async () => {}).run()).to.be.rejectedWith(/async/);
+        expect(converge.always(async () => { }).run()).to.be.rejectedWith(/async/);
       });
 
       it('rejects with an error when returning a promise', () => {
@@ -368,7 +370,7 @@ describe('BigTest Convergence', () => {
 
       describe('with additional chaining', () => {
         beforeEach(() => {
-          assertion = assertion.do(() => {});
+          assertion = assertion.do(() => { });
         });
 
         it('resolves after one-tenth the total timeout', async () => {
@@ -386,7 +388,7 @@ describe('BigTest Convergence', () => {
     });
 
     describe('after using `.do()`', () => {
-      let assertion;
+      let assertion: Convergence;
 
       it('triggers the callback before resolving', () => {
         assertion = converge
@@ -423,7 +425,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('retains the instance context', () => {
-        assertion = converge.do(function() {
+        assertion = converge.do(function () {
           expect(this).to.equal(assertion);
         });
 
@@ -489,7 +491,7 @@ describe('BigTest Convergence', () => {
       });
 
       describe('and returning a promise', () => {
-        let resolve, reject;
+        let resolve: (val?: any) => any, reject: (val?: any) => any;
 
         beforeEach(() => {
           assertion = converge.do(() => {
@@ -570,7 +572,7 @@ describe('BigTest Convergence', () => {
       });
 
       it('stores and calls the callbacks first-in-first-out', async () => {
-        let arr = [];
+        let arr: string[] = [];
 
         let assertion = converge
           .do(() => arr.push('first'))

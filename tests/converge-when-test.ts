@@ -1,12 +1,15 @@
 import { describe, beforeEach, afterEach, it } from 'mocha';
 import { use, expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import * as chaiAsPromised from 'chai-as-promised';
 import { when } from '../src/converge';
+import { Thunk } from '../src/types';
 
 use(chaiAsPromised);
 
 describe('BigTest Convergence - when', () => {
-  let total, test, timeout;
+  let total: number,
+    test: (num: number) => Thunk<PromiseLike<any>> & PromiseLike<any>,
+    timeout: NodeJS.Timeout;
 
   beforeEach(() => {
     total = 0;
@@ -25,7 +28,7 @@ describe('BigTest Convergence - when', () => {
     expect(test(0)).to.be.a('function');
     expect(test(0)).to.have.property('then').that.is.a('function');
     expect(test(0)()).to.be.an.instanceof(Promise);
-    expect(test(0).then(() => {})).to.be.an.instanceof(Promise);
+    expect(test(0).then(() => { })).to.be.an.instanceof(Promise);
   });
 
   it('resolves when the assertion passes within the timeout', async () => {
@@ -52,7 +55,7 @@ describe('BigTest Convergence - when', () => {
   });
 
   it('rejects with an error when using an async function', async () => {
-    await expect(when(async () => {})).to.be.rejectedWith(/async/);
+    await expect(when(async () => { })).to.be.rejectedWith(/async/);
   });
 
   it('rejects with an error when returning a promise', async () => {
@@ -93,13 +96,15 @@ describe('BigTest Convergence - when', () => {
 
   describe('with a slight latency', () => {
     // exploits `while` to block the current event loop
-    let latency = (ms) => {
+    let latency = (ms: number) => {
       let start = Date.now();
       let end = start;
 
       while (end < start + ms) {
         end = Date.now();
       }
+
+      return false;
     };
 
     it('rejects as soon as it can after the timeout', async () => {
@@ -108,7 +113,7 @@ describe('BigTest Convergence - when', () => {
       await expect(
         // 5-10ms latencies start causing an increasing amount of
         // flakiness, anything higher fails more often than not
-        when(() => !!latency(20), 50)
+        when(() => latency(20), 50)
       ).to.be.rejected;
 
       // 10ms loop interval + 20ms latency = ~+30ms final latency
@@ -118,10 +123,12 @@ describe('BigTest Convergence - when', () => {
 
   describe('with a mocked date object', () => {
     beforeEach(() => {
+      // @ts-ignore
       global.Date = { _og: global.Date };
     });
 
     afterEach(() => {
+      // @ts-ignore
       global.Date = global.Date._og;
     });
 

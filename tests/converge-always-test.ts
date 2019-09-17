@@ -1,12 +1,15 @@
 import { describe, beforeEach, afterEach, it } from 'mocha';
 import { use, expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import * as chaiAsPromised from 'chai-as-promised';
 import { always } from '../src/converge';
+import { Thunk } from '../src/types';
 
 use(chaiAsPromised);
 
 describe('BigTest Convergence - always', () => {
-  let total, test, timeout;
+  let total: number,
+    test: (num: number) => Thunk<PromiseLike<any>> & PromiseLike<any>,
+    timeout: NodeJS.Timeout;
 
   beforeEach(() => {
     total = 5;
@@ -25,7 +28,7 @@ describe('BigTest Convergence - always', () => {
     expect(test(5)).to.be.a('function');
     expect(test(5)).to.have.property('then').that.is.a('function');
     expect(test(5)()).to.be.an.instanceof(Promise);
-    expect(test(5).then(() => {})).to.be.an.instanceof(Promise);
+    expect(test(5).then(() => { })).to.be.an.instanceof(Promise);
   });
 
   it('resolves if the assertion does not fail throughout the timeout', async () => {
@@ -43,7 +46,7 @@ describe('BigTest Convergence - always', () => {
   });
 
   it('rejects with an error when using an async function', async () => {
-    await expect(always(async () => {})).to.be.rejectedWith(/async/);
+    await expect(always(async () => { })).to.be.rejectedWith(/async/);
   });
 
   it('rejects with an error when returning a promise', async () => {
@@ -81,20 +84,22 @@ describe('BigTest Convergence - always', () => {
 
   describe('with a slight latency', () => {
     // exploits `while` to block the current event loop
-    let latency = (ms) => {
+    let latency = (ms: number) => {
       let start = Date.now();
       let end = start;
 
       while (end < start + ms) {
         end = Date.now();
       }
+
+      return true;
     };
 
     it('resolves as soon as it can after the timeout', async () => {
       let start = Date.now();
 
       await expect(
-        always(() => latency(20), 50, true)
+        always(() => latency(20), 50)
       ).to.be.fulfilled;
 
       expect(Date.now() - start).to.be.within(50, 80);
@@ -103,10 +108,12 @@ describe('BigTest Convergence - always', () => {
 
   describe('with a mocked date object', () => {
     beforeEach(() => {
+      // @ts-ignore
       global.Date = { _og: global.Date };
     });
 
     afterEach(() => {
+      // @ts-ignore
       global.Date = global.Date._og;
     });
 
