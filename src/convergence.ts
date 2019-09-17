@@ -1,8 +1,34 @@
 import {
   isConvergence,
   runAssertion,
-  runCallback
+  runCallback,
+  isAssertionTask,
+  isCallbackTask
 } from './utils';
+import { IStats } from './types';
+
+export type Assertion = (this: Convergence, prev?: any) => any;
+
+export type Callback = (this: Convergence, prev?: any) => any;
+
+export type Queue = Array<IAssertionTask | ICallbackTask>;
+
+export interface IAssertionTask {
+  assertion: Assertion;
+  always?: boolean;
+  timeout?: number;
+  last?: boolean;
+}
+
+export interface ICallbackTask {
+  callback: Callback;
+  last?: boolean;
+}
+
+export interface IOptions {
+  timeout?: number;
+  _queue?: Queue;
+}
 
 const { now } = Date;
 
@@ -83,6 +109,11 @@ const { now } = Date;
  * ```
  */
 class Convergence {
+  static isConvergence = isConvergence;
+
+  _timeout!: number;
+  _queue!: Queue;
+
   /**
    * The constructor actually takes two params, `options` and
    * `previous`. Publicly, `options` is `timeout`, but internally, new
@@ -92,9 +123,12 @@ class Convergence {
    * internal API.
    *
    * @constructor
-   * @param {Number} timeout - Initial convergence timeout
+   * @param timeout - Initial convergence timeout
    */
-  constructor(options = {}, previous = {}) {
+  constructor(
+    options: IOptions | number = {},
+    previous: Convergence = {} as any
+  ) {
     // a timeout was given
     if (typeof options === 'number') {
       options = { timeout: options };
@@ -127,13 +161,15 @@ class Convergence {
    * long.timeout() // => 5000
    * ```
    *
-   * @param {Number} [timeout] - Timeout for the next convergence
-   * @returns {Number|Convergence} The current instance timeout or
+   * @param [timeout] - Timeout for the next convergence
+   * @returns The current instance timeout or
    * a new convergence instance
    */
-  timeout(timeout) {
+  timeout(): number;
+  timeout(timeout: number): this;
+  timeout(timeout?: number): number | this {
     if (typeof timeout !== 'undefined') {
-      return new this.constructor(timeout, this);
+      return Reflect.construct(this.constructor, [timeout, this]);
     } else {
       return this._timeout;
     }
@@ -153,13 +189,15 @@ class Convergence {
    * let convergeFooBar = convergeFoo.when(() => foo === 'baz')
    * ```
    *
-   * @param {Function} assertion - The assertion to converge on
-   * @returns {Convergence} A new convergence instance
+   * @param assertion - The assertion to converge on
+   * @returns A new convergence instance
    */
-  when(assertion) {
-    return new this.constructor({
-      _queue: [{ assertion }]
-    }, this);
+  when(assertion: Assertion): this {
+    let task: IAssertionTask = { assertion };
+
+    return Reflect.construct(this.constructor, [{
+      _queue: [task]
+    }, this])
   }
 
   /**
@@ -199,19 +237,21 @@ class Convergence {
    *   .always(() => foo === 'bar', 100)
    * ```
    *
-   * @param {Function} assertion - The assertion to converge on
-   * @param {Number} [timeout] - The timeout to use, capped at the
+   * @param assertion - The assertion to converge on
+   * @param [timeout] - The timeout to use, capped at the
    * remaining timeout.
-   * @returns {Convergence} A new convergence instance
+   * @returns A new convergence instance
    */
-  always(assertion, timeout) {
-    return new this.constructor({
-      _queue: [{
-        always: true,
-        assertion,
-        timeout
-      }]
-    }, this);
+  always(assertion: Assertion, timeout?: number): this {
+    let task: IAssertionTask = {
+      always: true,
+      assertion,
+      timeout
+    };
+
+    return Reflect.construct(this.constructor, [{
+      _queue: [task]
+    }, this]);
   }
 
   /**
@@ -274,13 +314,15 @@ class Convergence {
    *   })
    * ```
    *
-   * @param {Function} callback - The callback to execute
-   * @returns {Convergence} A new convergence instance
+   * @param callback - The callback to execute
+   * @returns A new convergence instance
    */
-  do(callback) {
-    return new this.constructor({
-      _queue: [{ callback }]
-    }, this);
+  do(callback: Callback): this {
+    let task: ICallbackTask = { callback };
+
+    return Reflect.construct(this.constructor, [{
+      _queue: [task]
+    }, this])
   }
 
   /**
@@ -298,17 +340,17 @@ class Convergence {
    * let convergeBarBaz = convergeBar.append(convergeBaz)
    * ```
    *
-   * @param {Convergence} convergence - A convergence instance
-   * @returns {Convergence} A new convergence instance
+   * @param convergence - A convergence instance
+   * @returns A new convergence instance
    */
-  append(convergence) {
+  append(convergence: Convergence): this {
     if (!isConvergence(convergence)) {
       throw new Error('.append() only works with convergence instances');
     }
 
-    return new this.constructor({
+    return Reflect.construct(this.constructor, [{
       _queue: convergence._queue
-    }, this);
+    }, this]);
   }
 
   /**
@@ -357,13 +399,11 @@ class Convergence {
    *   stats.queue   // array of other stats for each assertion
    * })
    * ```
-   *
-   * @returns {Promise}
    */
-  run() {
+  run(): Promise<IStats> {
     let start = now();
 
-    let stats = {
+    let stats: IStats = {
       start,
       runs: 0,
       end: start,
@@ -381,9 +421,9 @@ class Convergence {
       }
 
       return promise.then(ret => {
-        if (subject.assertion) {
+        if (isAssertionTask(subject)) {
           return runAssertion.call(this, subject, ret, stats);
-        } else if (subject.callback) {
+        } else if (isCallbackTask(subject)) {
           return runCallback.call(this, subject, ret, stats);
         }
       });
@@ -426,19 +466,16 @@ class Convergence {
    *   $node.value = value
    * }
    * ```
-   *
-   * @private
-   * @returns {Promise}
    */
-  then() {
+  then(
+    onfulfilled?: (value: any) => any,
+    onrejected?: (reason: any) => any
+  ): PromiseLike<any> {
     // resolve with the value of the last function in the queue
     let promise = this.run().then(({ value }) => value);
     // pass promise arguments onward
-    return promise.then.apply(promise, arguments);
+    return promise.then(onfulfilled, onrejected);
   }
 }
-
-// static `isConvergence` method
-Convergence.isConvergence = isConvergence;
 
 export default Convergence;

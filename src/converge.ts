@@ -1,3 +1,6 @@
+import { Thunk, IStats } from './types';
+import { Assertion } from './convergence';
+
 const { now } = Date;
 
 /**
@@ -15,20 +18,20 @@ const { now } = Date;
  *
  * @private
  * @function convergeOn
- * @param {Function} assertion - Run to test condition repeatedly
- * @param {Number} timeout - Milliseconds to check assertion
- * @param {Boolean} always - If true, the assertion must pass
+ * @param assertion - Run to test condition repeatedly
+ * @param timeout - Milliseconds to check assertion
+ * @param always - If true, the assertion must pass
  * throughout the entire timeout period
- * @returns {Promise} Resolves if the assertion passes at least once;
+ * @returns Resolves if the assertion passes at least once;
  * if `always` is true, then rejects at the first error instead
  */
-export function convergeOn(assertion, timeout, always) {
+export function convergeOn(assertion: Assertion, timeout: number, always: boolean): Promise<IStats> {
   let start = now();
   let interval = 10;
   let bail = false;
 
   // track various stats
-  let stats = {
+  let stats: IStats = {
     start,
     runs: 0,
     end: start,
@@ -44,10 +47,12 @@ export function convergeOn(assertion, timeout, always) {
       stats.runs += 1;
 
       try {
+        // @ts-ignore
+        // `this` is bound in `runAssertion`
         let results = assertion();
 
         // a promise means there could be side-effects; bail
-        if (results && typeof results.then === 'function') {
+        if (isPromise(results)) {
           bail = true;
 
           throw new Error(
@@ -91,16 +96,30 @@ export function convergeOn(assertion, timeout, always) {
 }
 
 /**
- * Helper to make a function thannable which will invoke itself and
- * call `.then` on the results.
+ * Helper to check if a value is `Promise`-like.
  *
  * @private
- * @param {Function} fn - Function to make thennable
- * @returns {Function} function with a then method
+ * @param val - value to check
+ * @returns true if the value is promise-like, false if not
  */
-function thennable(fn) {
+function isPromise(val: any): val is PromiseLike<unknown> {
+  return val && typeof val.then === 'function';
+}
+
+/**
+ * Helper to defer the execution of a `Promise` until `then`
+ * is called on it.
+ *
+ * @private
+ * @param fn - thunk containing the `Promise` to defer
+ * @returns function with a then method
+ */
+function deferPromise<T>(fn: Thunk<PromiseLike<T>>): Thunk<PromiseLike<T>> & PromiseLike<T> {
   return Object.defineProperty(fn, 'then', {
-    value: (...args) => fn().then(...args)
+    value: (
+      onfulfilled: <U>(val: T) => U,
+      onrejected: <U>(reason: any) => U
+    ) => fn().then(onfulfilled, onrejected)
   });
 }
 
@@ -142,13 +161,13 @@ function thennable(fn) {
  * ```
  *
  * @function when
- * @param {Function} assertion - Assertion to converge on
- * @param {Number} [timeout=2000] - Timeout in milliseconds
- * @returns {Function} thennable function that resolves when the
+ * @param assertion - Assertion to converge on
+ * @param [timeout=2000] - Timeout in milliseconds
+ * @returns thennable function that resolves when the
  * assertion converges
  */
-export function when(assertion, timeout = 2000) {
-  return thennable(() => convergeOn(assertion, timeout, false));
+export function when(assertion: Assertion, timeout = 2000) {
+  return deferPromise(() => convergeOn(assertion, timeout, false));
 }
 
 /**
@@ -189,11 +208,11 @@ export function when(assertion, timeout = 2000) {
  * ```
  *
  * @function always
- * @param {Function} assertion - Assertion to converge with
- * @param {Number} [timeout=200] - Timeout in milliseconds
- * @returns {Function} thennable function that resolves when the
+ * @param assertion - Assertion to converge with
+ * @param [timeout=200] - Timeout in milliseconds
+ * @returns thennable function that resolves when the
  * assertion converges
  */
-export function always(assertion, timeout = 200) {
-  return thennable(() => convergeOn(assertion, timeout, true));
+export function always(assertion: Assertion, timeout = 200) {
+  return deferPromise(() => convergeOn(assertion, timeout, true));
 }

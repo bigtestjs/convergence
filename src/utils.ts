@@ -1,4 +1,6 @@
 import { when, always } from './converge';
+import Convergence, { IAssertionTask, ICallbackTask } from './convergence';
+import { IStats } from './types';
 
 const { now } = Date;
 
@@ -7,12 +9,12 @@ const { now } = Date;
  * the allowed `max` timeout.
  *
  * @private
- * @param {Number} start - Start time
- * @param {Number} max - Maximum elapsed time
- * @returns {Number} Elapsed time since `start`
+ * @param start - Start time
+ * @param max - Maximum elapsed time
+ * @returns Elapsed time since `start`
  * @throws {Error} If the elapsed time exceeds `max`
  */
-function getElapsedSince(start, max) {
+function getElapsedSince(start: number, max: number): number {
   let elapsed = now() - start;
 
   // we shouldn't continue beyond the timeout
@@ -28,17 +30,20 @@ function getElapsedSince(start, max) {
  * `stats.value` is undefined, `ret` is returned.
  *
  * @private
- * @param {Object} accumulator - Stats accumulator
- * @param {Object} stats - New stats to add
- * @param {*} ret - Return value when `stats.value` is undefined
- * @returns {*}
+ * @param accumulator - Stats accumulator
+ * @param stats - New stats to add
+ * @param ret - Return value when `stats.value` is undefined
  */
-function collectStats(accumulator, stats, ret) {
+function collectStats(accumulator: IStats, stats: IStats, ret: any): any {
   accumulator.runs += stats.runs;
   accumulator.elapsed += stats.elapsed;
   accumulator.end = stats.end;
   accumulator.value = stats.value;
-  accumulator.queue.push(stats);
+  if (accumulator.queue) {
+    accumulator.queue.push(stats);
+  } else {
+    accumulator.queue = [];
+  }
 
   return typeof stats.value !== 'undefined'
     ? stats.value : ret;
@@ -60,10 +65,9 @@ function collectStats(accumulator, stats, ret) {
  *
  * @static
  * @alias Convergence.isConvergence
- * @param {Object} obj - A possible convergence object
- * @returns {Boolean}
+ * @param obj - A possible convergence object
  */
-export function isConvergence(obj) {
+export function isConvergence(obj: any): obj is Convergence {
   return !!obj && typeof obj === 'object' &&
     '_queue' in obj && Array.isArray(obj._queue) &&
     'timeout' in obj && typeof obj.timeout === 'function' &&
@@ -71,17 +75,36 @@ export function isConvergence(obj) {
 }
 
 /**
+ * @private
+ */
+export function isAssertionTask(obj: any): obj is IAssertionTask {
+  return !!obj && typeof obj === 'object' && 'assertion' in obj;
+}
+
+/**
+ * @private
+ */
+export function isCallbackTask(obj: any): obj is ICallbackTask {
+  return !!obj && typeof obj === 'object' && 'callback' in obj;
+}
+
+/**
  * Runs a single assertion from a convergence queue with `arg` as the
  * assertion's argument. Adds convergence stats to the `stats` object.
  *
  * @private
- * @param {Object} subject - Convergence assertion queue item
- * @param {*} arg - Passed as the assertion's argument
- * @param {Object} stats - Stats accumulator object
- * @returns {Promise} Resolves with the assertion's return value
+ * @param subject - Convergence assertion queue item
+ * @param arg - Passed as the assertion's argument
+ * @param stats - Stats accumulator object
+ * @returns Resolves with the assertion's return value
  */
-export function runAssertion(subject, arg, stats) {
-  let timeout = stats.timeout - getElapsedSince(stats.start, stats.timeout);
+export function runAssertion(
+  this: Convergence,
+  subject: IAssertionTask,
+  arg: any,
+  stats: IStats
+): PromiseLike<any> {
+  let timeout = stats.timeout! - getElapsedSince(stats.start, stats.timeout!);
   let assertion = subject.assertion.bind(this, arg);
   let converge = subject.always ? always : when;
 
@@ -92,12 +115,12 @@ export function runAssertion(subject, arg, stats) {
       timeout = Math.min(timeout, subject.timeout);
     } else if (!subject.last) {
       // default to one-tenth the total, minimum 20ms
-      timeout = Math.max(stats.timeout / 10, 20);
+      timeout = Math.max(stats.timeout! / 10, 20);
     }
   }
 
   return converge(assertion, timeout)
-  // incorporate stats and curry the assertion return value
+    // incorporate stats and curry the assertion return value
     .then((convergeStats) => collectStats(stats, convergeStats, arg));
 }
 
@@ -118,23 +141,28 @@ export function runAssertion(subject, arg, stats) {
  * @param {Object} stats - Stats accumulator object
  * @returns {Promise} Resolves with the function's return value
  */
-export function runCallback(subject, arg, stats) {
+export function runCallback(
+  this: Convergence,
+  subject: ICallbackTask,
+  arg: any,
+  stats: IStats
+) {
   let start = now();
   let result = subject.callback.call(this, arg);
 
-  let collectExecStats = value => {
+  let collectExecStats = (value: any) => {
     return collectStats(stats, {
       start,
       runs: 1,
       end: now(),
-      elapsed: getElapsedSince(start, stats.timeout),
+      elapsed: getElapsedSince(start, stats.timeout!),
       value
     }, arg);
   };
 
   // a convergence is called with the current remaining timeout
   if (isConvergence(result)) {
-    let timeout = stats.timeout - getElapsedSince(start, stats.timeout);
+    let timeout = stats.timeout! - getElapsedSince(start, stats.timeout!);
 
     if (!subject.last) {
       // this .do() just prevents the last .always() from
@@ -142,15 +170,15 @@ export function runCallback(subject, arg, stats) {
       result = result.do(ret => ret);
     }
 
-    return result.timeout(timeout).run()
-    // incorporate stats and curry the return value
+    return (result as Convergence).timeout(timeout).run()
+      // incorporate stats and curry the return value
       .then(convergeStats => collectStats(stats, convergeStats, arg));
 
-  // a promise will need to settle first
+    // a promise will need to settle first
   } else if (result && typeof result.then === 'function') {
     return result.then(collectExecStats);
 
-  // any other result is just returned
+    // any other result is just returned
   } else {
     return collectExecStats(result);
   }

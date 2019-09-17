@@ -1,5 +1,18 @@
 {
   "compilerOptions": {
-    "strict": true
-  }
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "newLine": "LF",
+    "noUnusedLocals": true,
+    "declaration": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "src",
+    "tests"
+  ]
 }
