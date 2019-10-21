@@ -15,8 +15,8 @@
     "build": "rollup --config",
     "docs": "bigtest-docs",
     "lint": "eslint --ignore-path .gitignore ./",
-    "postpublish": "bigtest-tag-version",
-    "test": "mocha --opts ./tests/mocha.opts ./tests"
+    "test": "mocha --opts ./tests/mocha.opts ./tests",
+    "prepack": "npm run docs && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
