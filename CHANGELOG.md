@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## [1.1.2] - 2019-10-21
+
+### Changed
+
+- Upgrade mocha and other dependencies in order to avoid github
+  security warnings.
+    - https://github.com/bigtestjs/convergence/pull/29
+    - https://github.com/bigtestjs/convergence/pull/28
+- Transition to automated transparent publishing via GitHub
+  actions. https://github.com/bigtestjs/convergence/pull/27
+
 ## [1.1.1] - 2018-10-23
 
 ### Fixed
